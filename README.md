@@ -1,3 +1,16 @@
+# add cmake compile support
+
+* base on https://github.com/gregrahn/tpcds-kit.git commit 5a3a81796992b725c2a8b216767e142609966752
+
+now setup as follows:
+
+```
+cmake -Bbuild
+cmake --build build
+```
+
+add you can found executable file in `build` directory. do others as usual.
+
 # tpcds-kit
 
 The official TPC-DS tools can be found at [tpc.org](http://www.tpc.org/tpc_documents_current_versions/current_specifications.asp).

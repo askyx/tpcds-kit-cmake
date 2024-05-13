@@ -22,20 +22,17 @@
 # Generated files
 tables.h
 streams.h
-mkheader
 columns.h
 tpcds.idx.h
 tpcds.idx
-distcomp
 y.tab.h
 y.tab.c
 y.output
 tokenizer.c
-dsqgen
-dsdgen
 checksum
 .ctags_updated
 tags
 
 # Flat files
 *.dat
+build/

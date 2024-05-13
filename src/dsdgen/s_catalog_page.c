@@ -33,66 +33,99 @@
  * Contributors:
  * Gradient Systems
  */ 
-#define _LARGEFILE64_SOURCE 1
-#define _FILE_OFFSET_BITS 64
+#include "config.h"
+#include "porting.h"
 #include <stdio.h>
-#include <stdlib.h>
- 
-unsigned short GetCCITT (unsigned short crc, unsigned short ch)
+#include "genrand.h"
+#include "s_catalog_page.h"
+#include "w_catalog_page.h"
+#include "print.h"
+#include "columns.h"
+#include "build_support.h"
+#include "tables.h"
+#include "scaling.h"
+#include "tdef_functions.h"
+#include "validate.h"
+#include "parallel.h"
+
+extern struct CATALOG_PAGE_TBL g_w_catalog_page;
+
+int
+mk_s_catalog_page(void *pDest, ds_key_t kRow)
 {
-  static unsigned int i;
- 
-  ch <<= 8;
-  for (i=8; i>0; i--) {
-    if ((ch ^ crc) & 0X8000)
-      crc = (crc << 1 ) ^ 0x1021;
-    else
-      crc <<= 1;
-    ch <<= 1;
-  }
-  return (crc);
+   mk_w_catalog_page(pDest, kRow);
+   row_stop(CATALOG_PAGE);
+
+   return(0);
 }
- 
-int main(int argc, char *argv[]) {
-  FILE *fin;
-  char *buffer;
-  size_t i, j;
-  long long int nLF=0, nCR=0, nChar=0, nDelim=0;
-  unsigned short crc=0;
- 
-  if (argc < 2) {
-    fin = stdin;
-  } else {
-    if (( fin = fopen (argv[1], "rb")) == NULL ) {
-      fprintf (stderr, "Cannot open %s\n", argv[1]);
-      return (1);
-    }
-  }
- 
-  if ((buffer = (char *)malloc(32766)) == NULL) {
-    fprintf (stderr, "Out of memory\n");
-    return (1);
-  }
- 
-  for (;;) {
-    i = fread(buffer, 1, 32766, fin);
-    if (i == 0) {
-      if (feof (fin)) {
-        printf("CCITT CRC for %s is %04X; #LF/#CR is %lld/%lld; #Delim is %lld; #Chars is %lld\n",
-          argv[1], crc, nLF, nCR, nDelim, nChar);
-        return (0);
-      }
-      else
-        continue;
-    }
-    for (j=0; j<i; j++) {
-      ++nChar;
-      switch (buffer[j]) {
-        case 10: ++nLF; break;
-        case 13: ++nCR; break;
-        case '|': ++nDelim; crc = GetCCITT (crc, buffer[j]); break;
-        default: crc = GetCCITT (crc, buffer[j]); break;
-      }
-    }
-  }
+
+/*
+* Routine: 
+* Purpose: 
+* Algorithm:
+* Data Structures:
+*
+* Params:
+* Returns:
+* Called By: 
+* Calls: 
+* Assumptions:
+* Side Effects:
+* TODO: None
+*/
+int
+pr_s_catalog_page(void *pSrc)
+{
+	struct CATALOG_PAGE_TBL *r;
+	
+	if (pSrc == NULL)
+		r = &g_w_catalog_page;
+	else
+		r = pSrc;
+	
+	print_start(S_CATALOG_PAGE);
+	print_integer(S_CATALOG_PAGE_CATALOG_NUMBER, r->cp_catalog_number, 1);
+	print_integer(S_CATALOG_PAGE_NUMBER, r->cp_catalog_page_number, 1);
+	print_varchar(S_CATALOG_PAGE_DEPARTMENT, &r->cp_department[0], 1);
+	print_varchar(S_CP_ID, &r->cp_catalog_page_id[0], 1);
+   print_date(S_CP_START_DATE, r->cp_start_date_id, 1);
+   print_date(S_CP_END_DATE, r->cp_end_date_id, 1);
+   print_varchar(S_CP_DESCRIPTION, r->cp_description, 1);
+   print_varchar(S_CP_TYPE, r->cp_type, 0);
+	print_end(S_CATALOG_PAGE);
+	
+	return(0);
+}
+
+/*
+* Routine: 
+* Purpose: 
+* Algorithm:
+* Data Structures:
+*
+* Params:
+* Returns:
+* Called By: 
+* Calls: 
+* Assumptions:
+* Side Effects:
+* TODO: None
+*/
+int 
+ld_s_catalog_page(void *pSrc)
+{
+	struct CATALOG_PAGE_TBL *r;
+		
+	if (pSrc == NULL)
+		r = &g_w_catalog_page;
+	else
+		r = pSrc;
+	
+	return(0);
+}
+
+int 
+vld_s_catalog_page(int nTable, ds_key_t kRow, int *Permutation)
+{
+   return(validateGeneric(S_CATALOG_PAGE, kRow, NULL));
 }

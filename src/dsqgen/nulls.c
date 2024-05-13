@@ -35,32 +35,12 @@
  */ 
 #include "config.h"
 #include "porting.h"
-#include <stdio.h>
+#include "nulls.h"
 #include "genrand.h"
-#include "s_catalog_page.h"
-#include "w_catalog_page.h"
-#include "print.h"
-#include "columns.h"
-#include "build_support.h"
-#include "tables.h"
-#include "scaling.h"
-#include "tdef_functions.h"
-#include "validate.h"
-#include "parallel.h"
-
-struct CATALOG_PAGE_TBL g_w_catalog_page;
-
-int
-mk_s_catalog_page(void *pDest, ds_key_t kRow)
-{
-   mk_w_catalog_page(pDest, kRow);
-   row_stop(CATALOG_PAGE);
-
-   return(0);
-}
+#include "tdefs.h"
 
 /*
-* Routine: 
+* Routine: nullCheck(int nColumn)
 * Purpose: 
 * Algorithm:
 * Data Structures:
@@ -74,33 +54,27 @@ mk_s_catalog_page(void *pDest, ds_key_t kRow)
 * TODO: None
 */
 int
-pr_s_catalog_page(void *pSrc)
+nullCheck(int nColumn)
 {
-	struct CATALOG_PAGE_TBL *r;
-	
-	if (pSrc == NULL)
-		r = &g_w_catalog_page;
-	else
-		r = pSrc;
-	
-	print_start(S_CATALOG_PAGE);
-	print_integer(S_CATALOG_PAGE_CATALOG_NUMBER, r->cp_catalog_number, 1);
-	print_integer(S_CATALOG_PAGE_NUMBER, r->cp_catalog_page_number, 1);
-	print_varchar(S_CATALOG_PAGE_DEPARTMENT, &r->cp_department[0], 1);
-	print_varchar(S_CP_ID, &r->cp_catalog_page_id[0], 1);
-   print_date(S_CP_START_DATE, r->cp_start_date_id, 1);
-   print_date(S_CP_END_DATE, r->cp_end_date_id, 1);
-   print_varchar(S_CP_DESCRIPTION, r->cp_description, 1);
-   print_varchar(S_CP_TYPE, r->cp_type, 0);
-	print_end(S_CATALOG_PAGE);
-	
-	return(0);
+	static int nLastTable = 0;
+	tdef *pTdef;
+	ds_key_t kBitMask = 1;
+
+	nLastTable = getTableFromColumn(nColumn);
+	pTdef = getSimpleTdefsByNumber(nLastTable);
+
+	kBitMask <<= nColumn - pTdef->nFirstColumn;
+
+	return((pTdef->kNullBitMap & kBitMask) != 0);
 }
 
 /*
-* Routine: 
-* Purpose: 
+* Routine: nullSet(int *pDest, int nStream)
+* Purpose: set the kNullBitMap for a particular table
 * Algorithm:
+*	1. if random[1,100] >= table's NULL pct, clear map and return
+*	2. set map
+
 * Data Structures:
 *
 * Params:
@@ -108,24 +82,31 @@ pr_s_catalog_page(void *pSrc)
 * Called By: 
 * Calls: 
 * Assumptions:
-* Side Effects:
+* Side Effects: uses 2 RNG calls
 * TODO: None
 */
-int 
-ld_s_catalog_page(void *pSrc)
+void
+nullSet(ds_key_t *pDest, int nStream)
 {
-	struct CATALOG_PAGE_TBL *r;
-		
-	if (pSrc == NULL)
-		r = &g_w_catalog_page;
-	else
-		r = pSrc;
-	
-	return(0);
-}
+	int nThreshold;
+   ds_key_t kBitMap;
+	static int nLastTable = 0;
+   tdef *pTdef;
 
-int 
-vld_s_catalog_page(int nTable, ds_key_t kRow, int *Permutation)
-{
-   return(validateGeneric(S_CATALOG_PAGE, kRow, NULL));
+	nLastTable = getTableFromColumn(nStream);
+   pTdef = getSimpleTdefsByNumber(nLastTable);
+
+	/* burn the RNG calls */
+	genrand_integer(&nThreshold, DIST_UNIFORM, 0, 9999, 0, nStream);
+	genrand_key(&kBitMap, DIST_UNIFORM, 1, MAXINT, 0, nStream);
+
+	/* set the bitmap based on threshold and NOT NULL definitions */
+	*pDest = 0;
+	if (nThreshold < pTdef->nNullPct)
+	{
+		*pDest = kBitMap;
+		*pDest &= ~pTdef->kNotNullBitMap;
+	}
+
+	return;
 }

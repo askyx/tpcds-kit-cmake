@@ -32,18 +32,37 @@
  * 
  * Contributors:
  * Gradient Systems
+ */ 
+#include "config.h"
+#include "porting.h"
+#include <stdio.h>
+#include "release.h"
+#include "r_params.h"
+
+/*
+ * Routine: release(char *param_name, char *msg)
+ * Purpose: display version information
+ * Algorithm:
+ * Data Structures:
+ *
+ * Params:
+ * Returns:
+ * Called By: 
+ * Calls: 
+ * Assumptions:
+ * Side Effects:
+ * TODO: None
  */
-       0000129     DBGEN  minor    resolved (jack.stephens)  12-02-04  dist wrong for i_current_price  
-       0000127  1  QGEN   minor    resolved (jack.stephens)  12-02-04  qgen core dumps on some templates  
-       0000126     DBGEN  feature  resolved (jack.stephens)  11-23-04  add comparabiltiy zones to w_item  
-       0000125     QGEN   feature  resolved (jack.stephens)  11-17-04  allow LIST() on TEXT()  
-       0000120     DBGEN  minor    resolved (jack.stephens)  11-24-04  I_product_name should be unique  
-       0000119  1  DBGEN  minor    resolved (jack.stephens)  11-24-04  ws_web_page_sk  
-       0000118  1  DBGEN  minor    resolved (jack.stephens)  11-24-04  Wr_sold_time_sk should start with 1  
-       0000117     DBGEN  minor    resolved (jack.stephens)  11-24-04  Wr_sold_date_sk cannot start with 0  
-       0000116     DBGEN  major    resolved (jack.stephens)  11-24-04  Ss_sold_date_sk has to start with 2450815, not with 245814  
-       0000114     DBGEN  major    resolved (jack.stephens)  12-01-04  some history keeping dimension entries in the history table do not have NULL  
-       0000112  1  DBGEN  minor    closed   (jack.stephens)  12-02-04  c_first_sales_date_sk and c_first_shipto_date_sk are unique  
-       0000110  1  DBGEN  minor    closed   (jack.stephens)  12-02-04  cs_net_profit is always null  
-       0000109  1  DBGEN  major    closed   (jack.stephens)  12-02-04  Gen of store_sales/returns terminated with no error message  
-       0000106  1  DBGEN  major    resolved (jack.stephens)  11-30-04  parallel data doesn' t match serial generation  
+int
+printReleaseInfo (char *param_name, char *msg)
+{
+	fprintf (stderr,
+		"%s Population Generator (Version %d.%d.%d%s)\n",
+		get_str("PROG"), VERSION, RELEASE, MODIFICATION, PATCH);
+	fprintf (stderr, "Copyright %s %s\n", COPYRIGHT, C_DATES);
+	
+	exit(0);
+}
+
+
+

@@ -32,32 +32,114 @@
  * 
  * Contributors:
  * Gradient Systems
- */
-The following information applies to the Windows development environment.
+ */ 
+#include "config.h"
+#include "porting.h"
+#include <stdio.h>
+#include "genrand.h"
+#include "s_warehouse.h"
+#include "w_warehouse.h"
+#include "print.h"
+#include "columns.h"
+#include "build_support.h"
+#include "tables.h"
+#include "misc.h"
+#include "parallel.h"
+#include "permute.h"
+#include "scaling.h"
 
-The migration to the latest development environment (Visual Studio 2005) 
-resulted in a number of changes to the build process. Most changes are 
-transparent to the user of the toolkit. One is not.
+extern struct W_WAREHOUSE_TBL g_w_warehouse;
 
-The toolkit sources include a separate project ("grammar") that uses lex
-and YACC to produce a simple compiler for the query template files. The
-output from lex and YACC are included in the sources compiled as part of the 
-QGEN project within the toolkit, so that most people will not need to install
-anything other than a standard Windows development IDE. If you need to regenerate
-any of the following files, You will need to follow the step below:
-   y.tab.c
-   y.tab.h
-   qgen.lexer.c
+/*
+* Routine: 
+* Purpose: 
+* Algorithm:
+* Data Structures:
+*
+* Params:
+* Returns:
+* Called By: 
+* Calls: 
+* Assumptions:
+* Side Effects:
+* TODO: None
+*/
+int
+mk_s_warehouse (void* row, ds_key_t index)
+{
+   static int bInit = 0;
+   static int *pPermutation;
+   ds_key_t kIndex;
 
-To rebuild the grammar project:
+   if (!bInit)
+   {
+      pPermutation = makePermutation(NULL, (int)getIDCount(WAREHOUSE), S_WRHS_ID);
+      bInit = 1;
+   }
 
+   kIndex = getPermutationEntry(pPermutation, (int)index);
+   mk_w_warehouse(NULL, kIndex);
 
-1. Install cygwin (www.redhat.com/cygwin), including lex and yacc
-2. Enable the cygwin build rules for the grammar project
-  a. Right click on the grammar project within the SOluation View of the IDE
-  b. Select 'Custom Build Rules...'
-  c. Select 'Find Existing...'
-  d. Navigate to C:\cygwin
-  e. Accept the changes
-  f. Build the grammar project
-3. Build the remaining projects as usual
+   return(0);
+}
+
+/*
+* Routine: 
+* Purpose: 
+* Algorithm:
+* Data Structures:
+*
+* Params:
+* Returns:
+* Called By: 
+* Calls: 
+* Assumptions:
+* Side Effects:
+* TODO: None
+*/
+int
+pr_s_warehouse(void *pSrc)
+{
+	struct W_WAREHOUSE_TBL *r;
+
+   if (pSrc == NULL)
+		r = &g_w_warehouse;
+	else
+		r = pSrc;
+	
+	print_start(S_WAREHOUSE);
+	print_varchar(W_WAREHOUSE_ID, r->w_warehouse_id, 1);
+	print_varchar(W_WAREHOUSE_NAME, &r->w_warehouse_name[0], 1);
+	print_integer(W_WAREHOUSE_SQ_FT, r->w_warehouse_sq_ft, 0);
+	print_end(S_WAREHOUSE);
+	
+	return(0);
+}
+
+/*
+* Routine: 
+* Purpose: 
+* Algorithm:
+* Data Structures:
+*
+* Params:
+* Returns:
+* Called By: 
+* Calls: 
+* Assumptions:
+* Side Effects:
+* TODO: None
+*/
+int 
+ld_s_warehouse(void *pSrc)
+{
+	struct W_WAREHOUSE_TBL *r;
+		
+	if (pSrc == NULL)
+		r = &g_w_warehouse;
+	else
+		r = pSrc;
+	
+	return(0);
+}
+
